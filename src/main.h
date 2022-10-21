@@ -6,6 +6,4 @@
 #include <stdint.h>
 #include <math.h>
 
-#include "libs/generic_library.h"
-
 #endif

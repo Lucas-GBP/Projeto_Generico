@@ -1,20 +1,60 @@
+##
+## Variables
+##
 CC = gcc
-CC_FLAGS = 	-lm		\
-			-O2
-OUT_FILES = $(addsuffix .o,$(addprefix out/, main $(notdir $(basename $(wildcard libs/*.c)))))
+SRC_DIR = src
+BUILD_DIR = build
+WARNINGS =-Wall -Wextra -Wshadow -Wconversion
+ifeq ($(CC), clang)
+  WARNINGS := $(WARNINGS) -Wpedantic -Wno-unused-command-line-argument
+endif
+C_FLAGS = -O2 $(WARNINGS)
 
-executable.exe: $(OUT_FILES)
-	$(CC) $(OUT_FILES) -o executable.exe $(CC_FLAGS)
+##
+## OS Variables
+##
+ifeq '$(findstring ;,$(PATH))' ';'
+  OS := PlainWindows
+else
+  OS := $(shell uname 2>/dev/null || echo Unknown)
+  OS := $(patsubst CYGWIN%,Cygwin,$(OS))
+  OS := $(patsubst MSYS%,MSYS,$(OS))
+  OS := $(patsubst MINGW%,MINGW,$(OS))
+endif
 
-out/main.o: main.c main.h
-	$(CC) -o out/main.o main.c -c $(CC_FLAGS)
+##
+## Commands and Files
+##
+ifeq ($(OS), PlainWindows)
+  TARGET = bin/executable.exe
+  RM_COMMAND = del /s /q
+  CLEAN_PATH = *.o
+else
+  TARGET = bin/executable.out
+  RM_COMMAND = rm -f
+  MAKE_DIR = mkdir -p
+  C_FILES = $(shell find $(SRC_DIR) -type f -name \*.c)
+  O_FILES = $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(C_FILES:.c=.o))
+endif
 
-out/%.o: libs/%.c libs/%.h
-	$(CC) -o $@ $< -c $(CC_FLAGS)
+##
+## Targets
+##
+$(TARGET): $(O_FILES)
+	@$(MAKE_DIR) $(dir $@)
+	$(CC) $^ -o $(TARGET) $(C_FLAGS)
 
-run: executable.exe
-	./executable.exe
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+	@$(MAKE_DIR) $(dir $@)
+	$(CC) $(C_FLAGS) -c -o $@ $<
+
+build: $(TARGET)
+
+run:
+	@./$(TARGET)
 
 clean:
-	rm out/*.o executable.exe
+	$(RM_COMMAND) $(O_FILES) $(TARGET)
+	clear
 
+.PHONY: clean build run
