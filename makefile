@@ -26,9 +26,12 @@ endif
 ## Commands and Files
 ##
 ifeq ($(OS), PlainWindows)
-  TARGET = bin/executable.exe
-  RM_COMMAND = del /s /q
+  TARGET = bin\executable.exe
+  RM_COMMAND = del
+  MAKE_DIR = mkdir -p
   CLEAN_PATH = *.o
+  C_FILES = $(shell dir *.c /s /b)
+  O_FILES = $(patsubst %\$(SRC_DIR)\%,%\$(BUILD_DIR)\%,$(C_FILES:.c=.o))
 else
   TARGET = bin/executable.out
   RM_COMMAND = rm -f
@@ -47,6 +50,11 @@ $(TARGET): $(O_FILES)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@$(MAKE_DIR) $(dir $@)
 	$(CC) $(C_FLAGS) -c -o $@ $<
+
+test:
+	@echo $(OS)
+	@echo $(C_FILES)
+	@echo $(O_FILES)
 
 build: $(TARGET)
 
