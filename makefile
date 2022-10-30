@@ -2,8 +2,8 @@
 ## Variables
 ##
 CC = gcc
-SRC_DIR = src
-BUILD_DIR = build
+SRC_DIR := src
+BUILD_DIR := build
 WARNINGS =-Wall -Wextra -Wshadow -Wconversion
 ifeq ($(CC), clang)
   WARNINGS := $(WARNINGS) -Wpedantic -Wno-unused-command-line-argument
@@ -14,7 +14,7 @@ C_FLAGS = -O2 $(WARNINGS)
 ## OS Variables
 ##
 ifeq '$(findstring ;,$(PATH))' ';'
-  OS := PlainWindows
+  OS := Windows_OS
 else
   OS := $(shell uname 2>/dev/null || echo Unknown)
   OS := $(patsubst CYGWIN%,Cygwin,$(OS))
@@ -25,19 +25,20 @@ endif
 ##
 ## Commands and Files
 ##
-ifeq ($(OS), PlainWindows)
+ifeq ($(OS), Windows_OS)
+  DIR = $(shell chdir)
   TARGET = bin\executable.exe
-  RM_COMMAND = del
-  MAKE_DIR = mkdir -p
-  CLEAN_PATH = *.o
-  C_FILES = $(shell dir *.c /s /b)
-  O_FILES = $(patsubst %\$(SRC_DIR)\%,%\$(BUILD_DIR)\%,$(C_FILES:.c=.o))
+  RM_COMMAND = del /q /f
+  MAKE_DIR = mkdir
+  #SRC_FILES := $(shell dir "$(DIR)\*.c" /s /b)
+  SRC_FILES := $(shell (for /f "delims=" %f in ('dir /b /s /c *.c') do @echo "%f") > x.x)
 else
+  DIR = $(shell pwd)
   TARGET = bin/executable.out
   RM_COMMAND = rm -f
   MAKE_DIR = mkdir -p
-  C_FILES = $(shell find $(SRC_DIR) -type f -name \*.c)
-  O_FILES = $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(C_FILES:.c=.o))
+  SRC_FILES = $(shell find $(SRC_DIR) -type f -name \*.c)
+  O_FILES = $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(SRC_FILES:.c=.o))
 endif
 
 ##
@@ -53,8 +54,9 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 
 test:
 	@echo $(OS)
-	@echo $(C_FILES)
-	@echo $(O_FILES)
+	@echo $(TARGET)
+	@echo $(DIR)
+	@echo $(SRC_FILES)
 
 build: $(TARGET)
 
