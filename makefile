@@ -1,7 +1,7 @@
 ##
 ## Variables
 ##
-CC = gcc
+CC = clang++
 SRC_DIR = src
 BUILD_DIR = build
 WARNINGS =-Wall -Wextra -Wshadow -Wconversion
@@ -34,7 +34,8 @@ else
   RM_COMMAND = rm -f
   MAKE_DIR = mkdir -p
   C_FILES = $(shell find $(SRC_DIR) -type f -name \*.c)
-  O_FILES = $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(C_FILES:.c=.o))
+  CPP_FILES = $(shell find $(SRC_DIR) -type f -name \*.cpp)
+  O_FILES = $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(C_FILES:.c=.o)) $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(CPP_FILES:.cpp=.o))
 endif
 
 ##
@@ -43,6 +44,10 @@ endif
 $(TARGET): $(O_FILES)
 	@$(MAKE_DIR) $(dir $@)
 	$(CC) $^ -o $(TARGET) $(C_FLAGS)
+
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@$(MAKE_DIR) $(dir $@)
+	$(CC) $(C_FLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@$(MAKE_DIR) $(dir $@)
